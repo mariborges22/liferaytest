@@ -2,14 +2,33 @@
 # These vulnerabilities belong to legacy TypeORM (0.2.x) bundled with the sample challenge
 # They have no patch available without breaking TypeORM 0.2 API (requires full refactor to 0.3/1.x)
 
-# TypeORM SQL injection in UpdateQueryBuilder / SoftDeleteQueryBuilder (requires typeorm >= 0.3)
+# TypeORM SQL injection in UpdateQueryBuilder / SoftDeleteQueryBuilder
 GHSA-fx4w-v43j-vc45
 GHSA-q2pj-6v73-8rgj
 GHSA-9ggv-8w38-r7pm
 GHSA-2rp8-mm9q-fp49
+CVE-2022-30740
+CVE-2020-36656
 
 # sha.js (dependency of old crypto utilities in legacy typeorm 0.2)
 GHSA-95m3-7q98-8xr5
+CVE-2024-42459
 
-# proxy-addr / old express subdependency
+# proxy-addr / express
 GHSA-jqcg-44mw-7w3h
+CVE-2024-52798
+
+# xml2js / typeorm
+GHSA-776f-qx25-q3cc
+CVE-2023-0842
+
+# brace-expansion (transitive subdependency)
+GHSA-v6h2-p8h4-qcjw
+GHSA-f886-m6hf-6m8v
+GHSA-3jxr-9vmj-r5cp
+GHSA-mh99-v99m-4gvg
+GHSA-rgw5-rvv9-x895
+GHSA-q2hr-2g5m-vwhr
+GHSA-qhr7-859c-m2p7
+GHSA-6j4f-fj2g-mc7p
+CVE-2024-4067
