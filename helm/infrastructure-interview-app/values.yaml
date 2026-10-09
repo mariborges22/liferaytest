@@ -109,3 +109,7 @@ database:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Network Policy: Restrict pod-to-pod and egress traffic
+networkPolicy:
+  enabled: false  # Enable in production or environments with a CNI that supports NetworkPolicy

@@ -53,9 +53,7 @@ kubectl rollout status deployment/mariadb --timeout=120s
 # 7. Deploy Application via Helm
 echo ">> Step 6: Deploying Application via Helm Chart..."
 helm upgrade --install interview-app ./helm/infrastructure-interview-app \
-  --set image.pullPolicy=Never \
-  --set image.repository="mariborges22/infrastructure-interview-app" \
-  --set image.tag="1.0.0"
+  -f ./helm/infrastructure-interview-app/values-local.yaml
 
 echo ">> Waiting for Application Pods rollout..."
 kubectl rollout status deployment/interview-app-infrastructure-interview-app --timeout=180s

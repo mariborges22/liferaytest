@@ -1,0 +1,83 @@
+name: CD / Deploy to EKS (OIDC)
+
+on:
+  workflow_run:
+    workflows: ["CI / Security / Smoke Tests"]
+    types: [completed]
+    branches: ["master", "main"]
+
+permissions:
+  id-token: write   # Required for GitHub OIDC token
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: interview-eks-cluster
+  IMAGE_NAME: mariborges22/infrastructure-interview-app
+
+jobs:
+  deploy:
+    name: Deploy to EKS via Helm
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Passwordless authentication via OIDC Federation (no static AWS keys!)
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push to ECR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --name ${{ env.EKS_CLUSTER_NAME }} \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy via Helm
+        run: |
+          helm upgrade --install interview-app ./helm/infrastructure-interview-app \
+            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }} \
+            --set image.tag=${{ github.sha }} \
+            --set image.pullPolicy=Always \
+            --set database.existingSecret=db-credentials-secret \
+            --set topologySpreadConstraints.whenUnsatisfiable=DoNotSchedule \
+            --wait --timeout 300s
+
+      - name: Verify Deployment Rollout
+        run: |
+          kubectl rollout status deployment/interview-app-infrastructure-interview-app --timeout=180s
+
+      - name: Run Smoke Tests against EKS
+        run: |
+          INGRESS_URL=$(kubectl get ingress interview-app-infrastructure-interview-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Ingress URL: ${INGRESS_URL}"
+          sleep 10
+          APP_URL="http://${INGRESS_URL}" node tests/smoke-test.js

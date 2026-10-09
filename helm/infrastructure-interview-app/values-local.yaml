@@ -1,0 +1,46 @@
+# Local Kind cluster overrides
+# Usage: helm upgrade --install interview-app ./helm/infrastructure-interview-app -f helm/infrastructure-interview-app/values-local.yaml
+
+image:
+  repository: mariborges22/infrastructure-interview-app
+  pullPolicy: Never  # Image is loaded into Kind via `kind load docker-image`
+  tag: "1.0.0"
+
+# For local testing, ScheduleAnyway is more forgiving
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: "topology.kubernetes.io/zone"
+  whenUnsatisfiable: "ScheduleAnyway"
+
+# Local database
+database:
+  host: "mariadb"
+  port: 3306
+  name: "test"
+  synchronize: "true"
+  existingSecret: ""
+  user: "test"
+  password: "test_local_password"
+
+# Lighter resources for local development
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Disable HPA locally (metrics-server not always available in Kind)
+autoscaling:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix

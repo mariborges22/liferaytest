@@ -48,9 +48,7 @@ kubectl rollout status deployment/mariadb --timeout=120s
 # 6. Helm Deploy
 Write-Host ">> Step 6: Deploying Application via Helm Chart..." -ForegroundColor Yellow
 helm upgrade --install interview-app ./helm/infrastructure-interview-app `
-  --set image.pullPolicy=Never `
-  --set image.repository="mariborges22/infrastructure-interview-app" `
-  --set image.tag="1.0.0"
+  -f ./helm/infrastructure-interview-app/values-local.yaml
 
 kubectl rollout status deployment/interview-app-infrastructure-interview-app --timeout=180s
 

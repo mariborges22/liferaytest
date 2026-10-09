@@ -1,0 +1,36 @@
+========================================================
+ 🚀 {{ include "app.fullname" . }} deployed successfully!
+========================================================
+
+Application Version: {{ .Chart.AppVersion }}
+Chart Version:       {{ .Chart.Version }}
+Namespace:           {{ .Release.Namespace }}
+Replicas:            {{ .Values.replicaCount }}
+
+{{- if .Values.ingress.enabled }}
+
+📡 Access the application via Ingress:
+{{- range .Values.ingress.hosts }}
+  {{- if .host }}
+  http://{{ .host }}
+  {{- else }}
+  http://localhost (when using Kind with port mapping)
+  {{- end }}
+{{- end }}
+{{- end }}
+
+🏥 Health Probes:
+  Liveness:  GET /healthz
+  Readiness: GET /readyz
+
+📊 Verify Pod distribution across Availability Zones:
+  kubectl get pods -o wide -l app.kubernetes.io/name={{ include "app.name" . }}
+  kubectl get nodes -L topology.kubernetes.io/zone
+
+🔐 Secret Management:
+{{- if .Values.database.existingSecret }}
+  Using external secret: {{ .Values.database.existingSecret }}
+{{- else }}
+  Using chart-managed secret: {{ include "app.fullname" . }}-secret
+  ⚠️  For production, set database.existingSecret to use External Secrets Operator.
+{{- end }}
