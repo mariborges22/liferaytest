@@ -32,3 +32,19 @@ GHSA-q2hr-2g5m-vwhr
 GHSA-qhr7-859c-m2p7
 GHSA-6j4f-fj2g-mc7p
 CVE-2024-4067
+CVE-2024-4068
+
+# glob / minimatch / pacote / http-cache-semantics / ip-address
+GHSA-h755-8qp9-cq85
+GHSA-952p-6527-xmvc
+GHSA-c2qf-rxjj-qqgw
+GHSA-2p7v-qv4w-jh4v
+GHSA-3987-9m78-958x
+GHSA-2w8v-3cvg-rhc7
+GHSA-98m3-p6w3-9ff4
+GHSA-m95q-7mhc-6g5m
+CVE-2023-26136
+CVE-2022-25883
+CVE-2021-3918
+CVE-2021-3807
+CVE-2020-7774

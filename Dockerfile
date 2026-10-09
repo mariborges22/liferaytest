@@ -37,8 +37,8 @@ ENV PORT=3000
 # Copy package descriptors
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --omit=dev && npm cache clean --force
+# Install only production dependencies and remove npm build tools to minimize container attack surface
+RUN npm ci --omit=dev && npm cache clean --force && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Copy compiled JavaScript output from builder stage
 COPY --from=builder /app/dist ./dist

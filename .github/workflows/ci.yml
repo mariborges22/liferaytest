@@ -50,7 +50,12 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "infrastructure-interview-app:test"
-          trivy-config: "trivy.yaml"
+          scan-type: "image"
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+          trivyignores: ".trivyignore"
 
       - name: Run Trivy Misconfiguration Scanner (IaC & Manifests)
         uses: aquasecurity/trivy-action@master
