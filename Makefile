@@ -25,5 +25,15 @@ cluster-up: ## Provision local 3-AZ Kind cluster, deploy MariaDB, Helm app and r
 cluster-down: ## Delete local Kind cluster
 	./scripts/teardown-cluster.sh
 
+argocd-install: ## Install ArgoCD into the local Kubernetes cluster
+	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+argocd-app: ## Deploy local GitOps Application via ArgoCD
+	kubectl apply -f argocd/application-local.yaml
+
+argocd-ui: ## Port-forward ArgoCD Web UI to localhost:8080
+	kubectl port-forward svc/argocd-server -n argocd 8080:443
+
 clean: ## Clean local compilation artifacts
 	rm -rf dist node_modules
