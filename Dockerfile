@@ -1,9 +1,12 @@
 # ==========================================
 # Stage 1: Build TypeScript source code
 # ==========================================
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+
+# Upgrade OS packages to apply security patches
+RUN apk update && apk upgrade --no-cache
 
 # Copy dependency definition
 COPY package*.json ./
@@ -21,10 +24,10 @@ RUN npm run build
 # ==========================================
 # Stage 2: Minimal Production Image
 # ==========================================
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
-# Install dumb-init for PID 1 signal forwarding (SIGTERM / SIGINT) and reaping zombies
-RUN apk add --no-cache dumb-init
+# Upgrade OS packages to fix OS-level vulnerabilities and install dumb-init
+RUN apk update && apk upgrade --no-cache && apk add --no-cache dumb-init
 
 WORKDIR /app
 

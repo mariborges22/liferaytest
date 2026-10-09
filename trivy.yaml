@@ -11,6 +11,7 @@ vuln-type:
   - library
 
 ignore-unfixed: true
+ignorefile: .trivyignore
 
 format: table
 

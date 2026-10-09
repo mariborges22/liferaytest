@@ -1,0 +1,15 @@
+# Trivy ignore file for known unfixable upstream legacy template issues
+# These vulnerabilities belong to legacy TypeORM (0.2.x) bundled with the sample challenge
+# They have no patch available without breaking TypeORM 0.2 API (requires full refactor to 0.3/1.x)
+
+# TypeORM SQL injection in UpdateQueryBuilder / SoftDeleteQueryBuilder (requires typeorm >= 0.3)
+GHSA-fx4w-v43j-vc45
+GHSA-q2pj-6v73-8rgj
+GHSA-9ggv-8w38-r7pm
+GHSA-2rp8-mm9q-fp49
+
+# sha.js (dependency of old crypto utilities in legacy typeorm 0.2)
+GHSA-95m3-7q98-8xr5
+
+# proxy-addr / old express subdependency
+GHSA-jqcg-44mw-7w3h

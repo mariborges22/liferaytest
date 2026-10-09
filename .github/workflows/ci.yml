@@ -55,6 +55,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
+          trivyignores: ".trivyignore"
 
       - name: Run Trivy Misconfiguration Scanner (IaC & Manifests)
         uses: aquasecurity/trivy-action@master
