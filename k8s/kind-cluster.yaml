@@ -1,0 +1,48 @@
+# Kind Cluster Configuration with 1 Control-Plane and 3 Worker Nodes across 3 Availability Zones
+# This satisfies the requirement: "cluster has worker nodes in 3 different availability zones"
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: interview-cluster
+nodes:
+  # Control Plane node with extra port mappings for Ingress (port 80 & 443)
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+
+  # Worker Node 1: Availability Zone us-east-1a
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "topology.kubernetes.io/zone=us-east-1a"
+
+  # Worker Node 2: Availability Zone us-east-1b
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "topology.kubernetes.io/zone=us-east-1b"
+
+  # Worker Node 3: Availability Zone us-east-1c
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "topology.kubernetes.io/zone=us-east-1c"

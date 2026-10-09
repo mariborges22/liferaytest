@@ -1,0 +1,9 @@
+apiVersion: v2
+name: infrastructure-interview-app
+description: Production-grade Helm chart for Cloud Infrastructure Interview Application with Multi-AZ HA support
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Mari Borges
+    email: maribma13@gmail.com

@@ -1,0 +1,7 @@
+# Example Terraform variables
+aws_region         = "us-east-1"
+environment        = "production"
+cluster_name       = "interview-eks-cluster"
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+github_repo        = "mariborges22/liferaytest"

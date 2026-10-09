@@ -1,0 +1,111 @@
+# Default values for infrastructure-interview-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Highly Available replica count (spread across 3 AZs)
+replicaCount: 3
+
+image:
+  repository: mariborges22/infrastructure-interview-app
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.0.0"
+
+# Optional Goal: Private container repository authentication
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account (e.g., eks.amazonaws.com/role-arn for AWS IRSA)
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+# Expose externally via Reverse Proxy / Ingress Controller
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "15"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+  hosts:
+    - host: "" # Empty string matches any host (ideal for local testing)
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Horizontal Pod Autoscaler for elastic scaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+# PodDisruptionBudget ensures minimum available replicas during node drains / upgrades
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# High Availability requirement: distribute pods across 3 availability zones
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: "topology.kubernetes.io/zone"
+  whenUnsatisfiable: "ScheduleAnyway" # "DoNotSchedule" in strict prod, "ScheduleAnyway" in dev/testing
+
+# Database Connection & Secret Management
+database:
+  host: "mariadb"
+  port: 3306
+  name: "test"
+  synchronize: "true"
+  
+  # PRODUCTION BEST PRACTICE:
+  # In Staging/Production, set 'existingSecret' to the secret provisioned by
+  # External Secrets Operator (Vault, AWS Secrets Manager) or Sealed Secrets.
+  existingSecret: ""
+  userKey: "DB_USER"
+  passwordKey: "DB_PASSWORD"
+  
+  # Local development fallback only (ignored when existingSecret is set)
+  user: "test"
+  password: "test_local_password"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
