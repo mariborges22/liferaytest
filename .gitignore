@@ -1,0 +1,17 @@
+node_modules
+dist
+src/**/*.js
+src/**/*.js.map
+*.log
+.env
+.DS_Store
+Thumbs.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Helm
+*.tgz
