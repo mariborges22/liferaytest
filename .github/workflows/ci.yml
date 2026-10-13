@@ -177,7 +177,7 @@ jobs:
 
       - name: Port-forward and Execute In-Cluster Smoke Tests
         run: |
-          kubectl port-forward svc/interview-app-infrastructure-interview-app 3000:3000 &
+          kubectl port-forward svc/interview-app-infrastructure-interview-app 3000:80 &
           sleep 5
           APP_URL="http://localhost:3000" node tests/smoke-test.js
           echo "Kind + Helm End-to-End Validation Succeeded!"
