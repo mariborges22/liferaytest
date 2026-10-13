@@ -13,6 +13,9 @@ build: ## Build the multi-stage Docker image
 test: ## Run automated smoke tests (requires app running or APP_URL set)
 	node tests/smoke-test.js
 
+chaos-test: ## Run k6 chaos engineering & load testing suite
+	k6 run load-tests/k6-chaos-test.js
+
 scan: ## Run Trivy vulnerability and misconfiguration scan
 	./scripts/security-scan.sh $(IMAGE_NAME):$(IMAGE_TAG)
 

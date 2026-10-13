@@ -171,11 +171,37 @@ kubectl apply -f argocd/application-production.yaml
 
 ---
 
-## 🧪 Testes de Fumaça (Smoke Tests)
+---
 
-A suíte de testes de fumaça valida o fluxo de ponta a ponta da API (criação e listagem de entidades):
+## 🧪 Testes de Fumaça, Carga e Chaos Engineering (k6)
+
+### 1. Testes de Fumaça (Smoke Tests)
+Validação de ponta a ponta dos endpoints essenciais e persistência no banco:
+```bash
+APP_URL="http://localhost:3000" node tests/smoke-test.js
+```
+
+### 2. Chaos Engineering & Testes de Estresse com k6
+A suíte em [`load-tests/k6-chaos-test.js`](load-tests/k6-chaos-test.js) combina:
+- **Spike de Tráfego:** Subida de 5 para 80 requisições/s para testar capacidade de resposta e acionamento de auto-escalonamento (HPA).
+- **Chaos Injection (Fuzzing / Payloads Malformados):** Envio concorrente de JSON quebrado, bodies excessivos e simulações de SQL Injection para garantir que a aplicação não crashe (graceful error handling).
+- **SLOs Automatizados:** $p(95) < 400\text{ms}$ para tráfego padrão e taxa de erro estritamente menor que 2%.
 
 ```bash
-# Executar localmente apontando para o endpoint da aplicação:
-APP_URL="http://localhost" node tests/smoke-test.js
+# Executar a suíte de caos e carga localmente:
+make chaos-test
+# ou com k6 direto:
+k6 run load-tests/k6-chaos-test.js
 ```
+
+---
+
+## 🔭 Observabilidade & Rastreabilidade (OpenTelemetry)
+
+A aplicação conta com instrumentação de rastreamento distribuído compatível com o padrão W3C Trace Context:
+- **Módulo:** [`src/tracing.ts`](src/tracing.ts)
+- **Headers W3C:** Propagação e injeção automática de `traceparent`, `traceresponse` e `x-trace-id` nas respostas HTTP.
+- **Configuração via variáveis de ambiente:**
+  - `OTEL_ENABLED`: Ativa/desativa o rastreamento (`true`/`false`).
+  - `OTEL_SERVICE_NAME`: Nome do serviço reportado (padrão: `infrastructure-interview-app`).
+  - `OTEL_LOG_SPANS`: Exibe spans estruturados no log para ingestão por collectors (ex: OpenTelemetry Collector, Jaeger, Grafana Tempo, Datadog).

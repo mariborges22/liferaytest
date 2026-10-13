@@ -2,7 +2,7 @@ name: CD / Deploy to EKS (OIDC)
 
 on:
   workflow_run:
-    workflows: ["CI / Security / Smoke Tests"]
+    workflows: ["CI / Security / Chaos / Kind Integration"]
     types: [completed]
     branches: ["master", "main"]
   workflow_dispatch: # Allows manual trigger from GitHub UI

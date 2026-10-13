@@ -1,10 +1,11 @@
-name: CI / Security / Smoke Tests
+name: CI / Security / Chaos / Kind Integration
 
 on:
   push:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
+  workflow_dispatch:
 
 jobs:
   lint-and-build:
@@ -63,10 +64,10 @@ jobs:
           scan-type: "config"
           scan-ref: "."
           format: "table"
-          exit-code: "0" # Warnings reported without failing non-critical configs
+          exit-code: "0"
 
-  integration-smoke-test:
-    name: Integration & Smoke Tests
+  integration-and-chaos:
+    name: Integration, Smoke & Chaos Load Tests (k6)
     runs-on: ubuntu-latest
     needs: [lint-and-build]
     services:
@@ -97,7 +98,7 @@ jobs:
       - name: Compile application
         run: npm run build
 
-      - name: Start application in background
+      - name: Start application in background (with OpenTelemetry Tracing)
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
@@ -106,6 +107,8 @@ jobs:
           DB_NAME: test
           DB_SYNCHRONIZE: "true"
           PORT: 3000
+          OTEL_ENABLED: "true"
+          OTEL_LOG_SPANS: "true"
         run: |
           node dist/index.js &
           sleep 4
@@ -114,3 +117,67 @@ jobs:
         env:
           APP_URL: "http://localhost:3000"
         run: node tests/smoke-test.js
+
+      - name: Setup k6 Load & Chaos Testing Tool
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 Chaos Engineering & Stress Load Suite
+        env:
+          APP_URL: "http://localhost:3000"
+        run: |
+          k6 run load-tests/k6-chaos-test.js
+
+  kind-helm-e2e:
+    name: Full E2E Local Cluster Deployment (Kind + Helm)
+    runs-on: ubuntu-latest
+    needs: [docker-and-trivy]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Create Kind Multi-Node Cluster (Simulating 3 AZs)
+        uses: helm/kind-action@v1.10.0
+        with:
+          config: k8s/kind-cluster.yaml
+          cluster_name: interview-cluster
+
+      - name: Build Application Image inside CI Runner
+        run: |
+          docker build -t mariborges22/infrastructure-interview-app:1.0.0 .
+
+      - name: Load Image into Kind Cluster
+        run: |
+          kind load docker-image mariborges22/infrastructure-interview-app:1.0.0 --name interview-cluster
+
+      - name: Deploy MariaDB in-cluster
+        run: |
+          kubectl apply -f k8s/mariadb.yaml
+          kubectl rollout status deployment/mariadb --timeout=180s
+
+      - name: Lint Helm Chart
+        run: |
+          helm lint ./helm/infrastructure-interview-app
+
+      - name: Deploy Application via Helm Chart (Local Values)
+        run: |
+          helm install interview-app ./helm/infrastructure-interview-app \
+            -f ./helm/infrastructure-interview-app/values-local.yaml \
+            --wait --timeout 180s
+
+      - name: Verify Topology Spread & Pod Health
+        run: |
+          echo "=== Node Distribution across Zones ==="
+          kubectl get nodes -L topology.kubernetes.io/zone
+          echo "=== Pods Distribution across Zones ==="
+          kubectl get pods -o wide -l app.kubernetes.io/name=infrastructure-interview-app
+          kubectl describe deployment interview-app-infrastructure-interview-app
+
+      - name: Port-forward and Execute In-Cluster Smoke Tests
+        run: |
+          kubectl port-forward svc/interview-app-infrastructure-interview-app 3000:3000 &
+          sleep 5
+          APP_URL="http://localhost:3000" node tests/smoke-test.js
+          echo "Kind + Helm End-to-End Validation Succeeded!"

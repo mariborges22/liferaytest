@@ -20,7 +20,10 @@ const dbSynchronize = process.env.DB_SYNCHRONIZE !== undefined
 let dbConnection: Connection | null = null;
 let isShuttingDown = false;
 
+import {telemetryMiddleware} from "./tracing";
+
 const app = express();
+app.use(telemetryMiddleware);
 app.use(bodyParser.json());
 
 // Root endpoint
